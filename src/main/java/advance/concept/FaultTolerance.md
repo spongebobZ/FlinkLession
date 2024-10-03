@@ -1,0 +1,41 @@
+### state-状态
+1. 状态是一个算子类里的特殊变量
+2. 状态用来辅助计算，典型如在一个算子里，计算一条数据时需要依赖其他数据的场景，比如一个累计数据的算子，
+计算一条数据时需要知道前面的数据已计算出的累计值，那么就可以把前面的累计值保存到状态变量里
+3. 状态与普通变量的区别是它可以和checkpoint配合，这样状态会被定时的持久化到外部系统，当发生故障重启时能从外部系统恢复状态值
+4. 在flinksql中很多内置的函数都是使用了状态变量的，比如join、sum
+5. 在flinksql的udf如果想要使用状态变量可以选择使用AggregateFunction(udaf聚合函数)，AggregateFunction类自身维护了ACC变量，它会被
+当作状态存储起来，如果想要在udf中有需要保证容错的数据，则可以保存到ACC变量里
+6. 在flinksql的自定义连接器如果想要使用状态可以实现CheckpointedFunction接口，通过其initializeState方法和snapshotState方法管理状态
+7. 状态可以配置有效时间(ttl)，超过有效时间的状态数据会被清除，以此可以防止状态的无限膨胀。在flinksql中通过配置table.exec.state.ttl来指定有效时间
+
+### checkpoint-检查点
+1. 检查点用来定时把状态和定时器做持久化，后续若算子发生故障进行自动重启，flink会从checkpoint数据里恢复状态值和定时器
+2. JobManager负责下发checkpoint任务到source算子，具体是通过在流式数据里插入barrier数据(插队)，source算子收到barrier后自身先进行checkpoint持久化，
+然后barrier会随着其他流式数据向后流动，会流经所有计算算子直到sink算子，当barrier到达某个算子时，这个算子就会进行checkpoint持久化，因此，所有算子都会
+按需进行持久化，当sink算子checkpoint持久化完成后，会把所有算子的checkpoint持久化文件合并，这一次的checkpoint任务就完成了
+3. 在并行计算时，某个算子的上游算子可能是多个并行度的，而barrier会被复制到上游算子的所有并行子任务中，因此默认情况下，这个下游算子会等待上游算子所有并行子任务
+的barrier到达，然后才进行checkpoint持久化，这个模式也叫做aligned checkpoint(checkpoint对齐)。由于早到的barrier所在的子任务会等待其他子任务的
+barrier，所以早到的子任务的barrier后面的数据将会被缓存到下游算子中，等待这一次checkpoint持久化完成后才拿出来进行计算，因此checkpoint对齐会带来一些
+数据延迟
+4. 由于checkpoint对齐可能带来数据延迟，因此flink还支持另一个checkpoint模式：unaligned checkpoint(非对齐checkpoint)，也就是说早到barrier
+无需等待其他barrier到达就可以先进行checkpoint持久化，这样就避免了数据等待。优点是减少了数据延迟，加大了checkpoint大小(上游每个并行子任务的barrier
+到达下游算子时都进行checkpoint)
+
+### state backend-状态后端
+1. 状态后端用来指定状态以何种方式去执行checkpoint持久化任务，具体来说是指定checkpoint持久化保存位置
+2. flink支持了保存到JobManager内存里的HashMapStateBackend以及保存到RocksDB的EmbeddedRocksDBStateBackend，其中RocksDB把数据保存到每一个TaskManager
+的磁盘数据目录里
+3. HashMapStateBackend性能较快，但是若JobManager发生故障则会导致checkpoint数据丢失，并且内存相对有限，不适合存储大量的checkpoint数据
+4. RocksDB的EmbeddedRocksDBStateBackend性能相对慢，但是基于磁盘使其不会发生checkpoint数据丢失，并且磁盘空间一般足够，适合存储大量的
+checkpoint数据。而且RocksDB的EmbeddedRocksDBStateBackend支持增量存储，也就是说每一次checkpoint生成的文件是基于前一次来增量保存的，因此能节省
+大量的存储空间
+
+### restart-故障重启
+1. 若未开启checkpoint，那么默认下flink不启用故障重启，这就意味着当算子抛出异常后，会导致整个flink应用失败退出
+2. 若开启了checkpoint，那么默认下flink将启用默认重启策略(fixedDelayRestart)
+3. flink支持了3中重启策略：fixedDelayRestart、failureRateRestart、exponentialDelayRestart
+4. 算子重启的方式是重新获得算子实例，然后跟初次执行一样，先执行open方法，再执行后续的计算，所以重启后算子类的普通变量会被初始化。
+5. 在重启之前，会先把上下游所有算子都取消掉，然后重启所有算子。有两种取消并重启的方式，第一种是上下游所有算子的所有子任务都取消重启，第二种是只取消重启
+跟失败的算子子任务有数据交互的上下游子任务，默认情况下是第二种
+6. 若开启了checkpoint，那么在算子子任务open后会尝试从算子停止前最后一次的checkpoint数据里恢复状态变量
