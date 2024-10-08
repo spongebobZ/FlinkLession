@@ -21,6 +21,9 @@ public class LogReaderTest {
 
         tableEnv.executeSql(odsScoreDdl);
 
-        tableEnv.executeSql("select stu_no, sub_no, score from ods_score").print();
+//        tableEnv.executeSql("select stu_no, sub_no, score from ods_score " +
+//                "where stu_no = 1 and sub_no <> 1").print();
+        System.out.println(tableEnv.explainSql("select stu_no, sub_no, score from ods_score " +
+                "where stu_no <> 1 and sub_no <> 1"));
     }
 }

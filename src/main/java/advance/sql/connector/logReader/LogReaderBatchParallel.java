@@ -6,6 +6,7 @@ import org.apache.commons.io.LineIterator;
 import org.apache.flink.api.common.io.DefaultInputSplitAssigner;
 import org.apache.flink.api.common.io.RichInputFormat;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.io.GenericInputSplit;
@@ -16,7 +17,10 @@ import org.apache.flink.table.types.logical.LogicalTypeRoot;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * 继承RichInputFormat，实现具体读取数据的逻辑
@@ -29,18 +33,19 @@ public class LogReaderBatchParallel extends RichInputFormat<RowData, InputSplit>
     private int index;
     private final String path;
     private LineIterator lineIterator;
-    private int position = -1;
+    private int position;
     private final DeserializeFormatter deserializeFormatter;
+    private final Map<Integer, Tuple2<LogicalTypeRoot, Object>> predicates;
 
 
     public LogReaderBatchParallel(String path, String separator,
                                   List<Tuple3<LogicalTypeRoot, Integer, Integer>> columnSchema,
-                                  int parallelism) {
+                                  int parallelism, Map<Integer, Tuple2<LogicalTypeRoot, Object>> predicates) {
         this.path = path;
         this.deserializeFormatter = new DeserializeFormatter(columnSchema, separator);
         this.parallelism = parallelism;
+        this.predicates = predicates;
     }
-
 
 
     @Override
@@ -55,6 +60,7 @@ public class LogReaderBatchParallel extends RichInputFormat<RowData, InputSplit>
 
     /**
      * 初始化所有分区
+     *
      * @param minNumSplits Number of minimal input splits, as a hint.
      * @return
      * @throws IOException
@@ -82,14 +88,14 @@ public class LogReaderBatchParallel extends RichInputFormat<RowData, InputSplit>
     @Override
     public void open(InputSplit split) throws IOException {
         index = split.getSplitNumber();
-        System.out.println("source open @ " + index);
-
+        position = -1;
         File file = new File(path);
         this.lineIterator = FileUtils.lineIterator(file, "UTF-8");
     }
 
     /**
      * 声明读取是否已经结束
+     *
      * @return
      * @throws IOException
      */
@@ -112,11 +118,41 @@ public class LogReaderBatchParallel extends RichInputFormat<RowData, InputSplit>
         if (position % parallelism != index) {
             return nextRecord(reuse);
         }
-        return deserializeFormatter.deserializeToRowData(line);
+        RowData row = deserializeFormatter.deserializeToRowData(line);
+        if (matchPredicates(row)) {
+            return row;
+        } else {
+            return nextRecord(reuse);
+        }
     }
 
     @Override
     public void close() throws IOException {
         lineIterator.close();
     }
+
+    private boolean matchPredicates(RowData row) {
+        for (Map.Entry<Integer, Tuple2<LogicalTypeRoot, Object>> entry : predicates.entrySet()) {
+            int idx = entry.getKey();
+            Object value = entry.getValue().f1;
+
+            switch (entry.getValue().f0) {
+                case VARCHAR:
+                case CHAR:
+                    if (!Objects.equals(row.getString(idx).toString(), value)) {
+                        return false;
+                    }
+                    break;
+                case INTEGER:
+                    if (!Objects.equals(row.getInt(idx), value)) {
+                        return false;
+                    }
+                    break;
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
+
 }

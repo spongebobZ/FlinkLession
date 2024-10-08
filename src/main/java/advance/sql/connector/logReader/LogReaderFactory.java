@@ -62,8 +62,8 @@ public class LogReaderFactory implements DynamicTableSourceFactory {
             Tuple2<Integer, Integer> ps = getDataTypePrecisionAndScale(dataType);
             columnsSchema.add(Tuple3.of(physicalRowDataTypes.get(i).getLogicalType().getTypeRoot(), ps.f0, ps.f1));
         }
-        return new LogReaderSource(options.get(MODE), options.get(PATH), options.get(SEPARATOR), columnsSchema,
-                options.get(PARALLELISM));
+        return new LogReaderSource(options.get(MODE), options.get(PATH), options.get(SEPARATOR),
+                columnsSchema, options.get(PARALLELISM));
     }
 
     /**
