@@ -1,12 +1,13 @@
 package advance.sql.connector.logReader;
 
+import advance.sql.connector.logReader.lowLevel.batch.LogReaderBatchSource;
+import advance.sql.connector.logReader.lowLevel.stream.LogReaderStreamSource;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.table.connector.ChangelogMode;
-import org.apache.flink.table.connector.source.DynamicTableSource;
-import org.apache.flink.table.connector.source.InputFormatProvider;
-import org.apache.flink.table.connector.source.ScanTableSource;
+import org.apache.flink.table.connector.source.*;
 import org.apache.flink.table.connector.source.abilities.SupportsFilterPushDown;
+import org.apache.flink.table.connector.source.lookup.LookupFunctionProvider;
 import org.apache.flink.table.expressions.CallExpression;
 import org.apache.flink.table.expressions.FieldReferenceExpression;
 import org.apache.flink.table.expressions.ResolvedExpression;
@@ -22,7 +23,7 @@ import java.util.*;
  * 实现ScanTableSource接口，而ScanTableSource接口是DynamicTableSource的子类
  * 用于声明表运行时信息
  */
-public class LogReaderSource implements ScanTableSource, SupportsFilterPushDown {
+public class LogReaderSource implements ScanTableSource, SupportsFilterPushDown, LookupTableSource {
     private final String mode;
     private final String path;
     private final String separator;
@@ -73,9 +74,11 @@ public class LogReaderSource implements ScanTableSource, SupportsFilterPushDown 
     @Override
     public ScanRuntimeProvider getScanRuntimeProvider(ScanContext runtimeProviderContext) {
         if (mode.equalsIgnoreCase("batch")) {
-            return InputFormatProvider.of(new LogReaderBatchParallel(path, separator, columnSchema, parallelism, predicates));
+//            return InputFormatProvider.of(new LogReaderBatchParallel(path, separator, columnSchema, parallelism, predicates));
+            return SourceProvider.of(new LogReaderBatchSource(path, separator, columnSchema));
         } else {
-            return InputFormatProvider.of(new LogReaderStreamParallel(path, separator, columnSchema, parallelism));
+//            return InputFormatProvider.of(new LogReaderStreamParallel(path, separator, columnSchema, parallelism));
+            return SourceProvider.of(new LogReaderStreamSource(path, separator, parallelism, columnSchema));
         }
     }
 
@@ -111,5 +114,10 @@ public class LogReaderSource implements ScanTableSource, SupportsFilterPushDown 
             predicates.put(idx, Tuple2.of(logicalTypeRoot, value));
         }
         return Result.of(acceptedFilters, remainingFilters);
+    }
+
+    @Override
+    public LookupRuntimeProvider getLookupRuntimeProvider(LookupContext context) {
+        return LookupFunctionProvider.of(new LogReaderLookupFunction(path, separator, columnSchema));
     }
 }

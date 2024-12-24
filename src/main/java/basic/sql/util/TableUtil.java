@@ -21,12 +21,12 @@ public class TableUtil {
     // table.exec.resource.default-parallelism
     public static TableEnvironment getFixedRestartStreamTableEnv(int parallelism, int restartAttempts){
         StreamExecutionEnvironment streamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
-        streamExecutionEnvironment.setRestartStrategy(RestartStrategies.fixedDelayRestart(restartAttempts, 1000));
+        streamExecutionEnvironment.setRestartStrategy(RestartStrategies.fixedDelayRestart(restartAttempts, 3000));
         streamExecutionEnvironment.enableCheckpointing(3000L);
-        streamExecutionEnvironment.disableOperatorChaining();
-        Configuration configuration = new Configuration();
-        configuration.set(JobManagerOptions.EXECUTION_FAILOVER_STRATEGY, "region");
-        streamExecutionEnvironment.configure(configuration);
+//        streamExecutionEnvironment.disableOperatorChaining();
+//        Configuration configuration = new Configuration();
+//        configuration.set(JobManagerOptions.EXECUTION_FAILOVER_STRATEGY, "region");
+//        streamExecutionEnvironment.configure(configuration);
         TableEnvironment tableEnvironment = StreamTableEnvironment.create(streamExecutionEnvironment);
         tableEnvironment.getConfig().getConfiguration().setInteger("table.exec.resource.default-parallelism", parallelism);
         return tableEnvironment;

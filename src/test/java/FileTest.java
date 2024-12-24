@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public class FileTest {
     public static void main(String[] args) {
-        String path = "/Users/jolin/Documents/codes/Flink/src/main/java/advance/sql/connector/logReader/ods_score.csv";
+        String path = "/Users/jolin/Documents/codes/Flink/src/main/java/advance/sql/connector/logReader/ods_score_81920.csv";
         try (LineIterator lineIterator = FileUtils.lineIterator(new File(path), "UTF-8")) {
             // 一旦监听到数据发生变更，则从position位置往后读取所有行
             while (lineIterator.hasNext()) {

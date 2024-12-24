@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 public class LogReaderStreamTest {
     public static void main(String[] args) {
-        TableEnvironment tableEnv = TableUtil.getStreamTableEnv(2);
+        TableEnvironment tableEnv = TableUtil.getFixedRestartStreamTableEnv(2, 3);
 
         String odsScoreDdl = "create table ods_score(" +
                 "stu_no int," +
@@ -20,7 +20,7 @@ public class LogReaderStreamTest {
                 ") with (" +
                 "'connector' = 'log-reader'," +
                 "'mode' = 'stream'," +
-                "'path' = '/Users/jolin/Documents/codes/Flink/src/main/java/advance/sql/connector/logReader/ods_score.csv'," +
+                "'path' = '/Users/jolin/Documents/codes/Flink/src/main/java/advance/sql/connector/logReader/ods_score_81920.csv'," +
                 "'separator' = ','," +
                 "'parallelism' = '2'" +
                 ")";

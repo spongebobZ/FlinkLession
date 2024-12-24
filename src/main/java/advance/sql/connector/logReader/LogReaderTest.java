@@ -5,7 +5,7 @@ import org.apache.flink.table.api.TableEnvironment;
 
 public class LogReaderTest {
     public static void main(String[] args) {
-        TableEnvironment tableEnv = TableUtil.getBatchTableEnv(2);
+        TableEnvironment tableEnv = TableUtil.getFixedRestartStreamTableEnv(2, 1);
 
         String odsScoreDdl = "create table ods_score(" +
                 "stu_no int," +
@@ -14,16 +14,15 @@ public class LogReaderTest {
                 ") with (" +
                 "'connector' = 'log-reader'," +
                 "'mode' = 'batch'," +
-                "'path' = '/Users/jolin/Documents/codes/Flink/src/main/java/advance/sql/connector/logReader/ods_score.csv'," +
+                "'path' = '/Users/jolin/Documents/codes/Flink/src/main/java/advance/sql/connector/logReader/ods_score_81920.csv'," +
                 "'separator' = ','," +
                 "'parallelism' = '2'" +
                 ")";
 
         tableEnv.executeSql(odsScoreDdl);
 
-//        tableEnv.executeSql("select stu_no, sub_no, score from ods_score " +
-//                "where stu_no = 1 and sub_no <> 1").print();
-        System.out.println(tableEnv.explainSql("select stu_no, sub_no, score from ods_score " +
-                "where stu_no <> 1 and sub_no <> 1"));
+        tableEnv.executeSql("select stu_no, sub_no, score from ods_score").print();
+//        System.out.println(tableEnv.explainSql("select stu_no, sub_no, score from ods_score " +
+//                "where stu_no <> 1 and sub_no <> 1"));
     }
 }

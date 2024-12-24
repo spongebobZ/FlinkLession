@@ -5,7 +5,7 @@ import conf.MysqlConf;
 import org.apache.flink.table.api.TableEnvironment;
 
 /**
- * 1. 要求驱动表为流表且含有process-time语义的字段，被关联表为lookup表
+ * 1. 要求驱动表为流表且含有process-time语义的字段，被关联表为lookup表(使用join...for system_time as of...语法时即被定义为lookup表)
  * 2. lookup表的数据从外部查找，lookup表的定义需要表的连接器支持，官方的jdbc连接器支持lookup模式，也可以自定义连接器实现lookup模式
  * 3. 驱动表有数据流入时会触发lookup join，根据join条件从外部数据来查找得到关联的数据(主动触发)
  * 4. lookup表所链接的外部数据有更新时不触发join(被动触动)
