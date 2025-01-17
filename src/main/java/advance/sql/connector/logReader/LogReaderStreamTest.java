@@ -20,7 +20,7 @@ public class LogReaderStreamTest {
                 ") with (" +
                 "'connector' = 'log-reader'," +
                 "'mode' = 'stream'," +
-                "'path' = '/Users/jolin/Documents/codes/Flink/src/main/java/advance/sql/connector/logReader/ods_score_81920.csv'," +
+                "'path' = '/Users/jolin/Documents/codes/Flink/src/main/java/advance/sql/connector/logReader/ods_score.csv'," +
                 "'separator' = ','," +
                 "'parallelism' = '2'" +
                 ")";

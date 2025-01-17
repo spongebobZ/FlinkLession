@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -138,13 +139,11 @@ public class LogSourceReader implements SourceReader<RowData, LogSplit> {
 
     @Override
     public void notifyNoMoreSplits() {
-        System.out.println("no more splits");
     }
 
     @Override
     public void close() throws Exception {
         this.running.set(false);
-        System.out.println("source reader closed");
     }
 
     private RowData readOneRow() throws IOException {
@@ -211,7 +210,7 @@ public class LogSourceReader implements SourceReader<RowData, LogSplit> {
                 rowRemain = true;
             }
             return deserializeFormatter.deserializeToRowData(line);
-        } catch (IOException e) {
+        } catch (IOException | NoSuchElementException e) {
             throw new RuntimeException(e);
         }
     }

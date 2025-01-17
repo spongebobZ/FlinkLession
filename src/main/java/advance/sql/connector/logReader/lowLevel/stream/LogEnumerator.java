@@ -69,7 +69,6 @@ public class LogEnumerator implements SplitEnumerator<LogSplit, LogCheckpoint> {
 
     @Override
     public void addReader(int subtaskId) {
-        System.out.printf("source reader %d added%n", subtaskId);
     }
 
     /**
@@ -85,6 +84,5 @@ public class LogEnumerator implements SplitEnumerator<LogSplit, LogCheckpoint> {
 
     @Override
     public void close() throws IOException {
-        System.out.println("split enumerator closed");
     }
 }
