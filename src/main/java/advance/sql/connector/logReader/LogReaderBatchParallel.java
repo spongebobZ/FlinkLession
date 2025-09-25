@@ -17,7 +17,6 @@ import org.apache.flink.table.types.logical.LogicalTypeRoot;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

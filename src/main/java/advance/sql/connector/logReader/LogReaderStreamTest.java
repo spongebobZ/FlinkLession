@@ -1,12 +1,10 @@
 package advance.sql.connector.logReader;
 
 import basic.sql.util.TableUtil;
-import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.functions.FunctionContext;
 import org.apache.flink.table.functions.ScalarFunction;
 
-import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 
 public class LogReaderStreamTest {

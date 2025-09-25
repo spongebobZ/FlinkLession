@@ -1,6 +1,5 @@
 package advance.concept;
 
-import basic.sql.util.TableUtil;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;

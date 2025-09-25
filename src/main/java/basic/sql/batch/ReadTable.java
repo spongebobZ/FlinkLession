@@ -1,8 +1,8 @@
 package basic.sql.batch;
 
+import basic.sql.util.TableUtil;
 import conf.MysqlConf;
 import org.apache.flink.table.api.TableEnvironment;
-import basic.sql.util.TableUtil;
 
 /**
  * 读取数据库的表数据并打印到屏幕

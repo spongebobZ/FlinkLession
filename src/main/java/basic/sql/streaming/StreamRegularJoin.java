@@ -2,7 +2,6 @@ package basic.sql.streaming;
 
 
 import basic.sql.util.TableUtil;
-import conf.MysqlConf;
 import org.apache.flink.table.api.TableEnvironment;
 
 /**

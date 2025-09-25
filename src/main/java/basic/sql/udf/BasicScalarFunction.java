@@ -1,6 +1,5 @@
 package basic.sql.udf;
 
-import org.apache.flink.table.functions.FunctionContext;
 import org.apache.flink.table.functions.ScalarFunction;
 
 /**

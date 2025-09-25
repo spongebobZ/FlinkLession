@@ -1,7 +1,7 @@
 package basic.sql.streaming;
 
-import org.apache.flink.table.api.TableEnvironment;
 import basic.sql.util.TableUtil;
+import org.apache.flink.table.api.TableEnvironment;
 
 /**
  * 实时排序
