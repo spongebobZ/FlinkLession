@@ -56,7 +56,7 @@ public class SlidingLoginTimes {
                     }
                 })
                 .keyBy(LoginRecord::getUserId)
-                .window(SlidingProcessingTimeWindows.of(Duration.ofDays(7), Duration.ofMinutes(2)))
+                .window(SlidingProcessingTimeWindows.of(Duration.ofDays(7), Duration.ofMinutes(10)))
                 .process(new CountLoginTimes())
                 .print();
 

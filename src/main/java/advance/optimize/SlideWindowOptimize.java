@@ -22,7 +22,7 @@ import java.time.Duration;
  * <p>
  * 背景：滑动窗口长，滑动频率高，导致计算效率低
  * <p>
- * 思路：按滑动频率先划分成多个预聚合小窗口，再对预聚合小窗口进行滑动窗口统计，大幅减少小窗口数据的重复计算
+ * 思路：按滑动频率和窗口长度的最大公约数先划分成多个预聚合小窗口，再对预聚合小窗口进行滑动窗口统计，大幅减少小窗口数据的重复计算
  */
 public class SlideWindowOptimize {
     /**
@@ -42,7 +42,7 @@ public class SlideWindowOptimize {
                 .assignTimestampsAndWatermarks(WatermarkStrategy.<Event>forBoundedOutOfOrderness(Duration.ofSeconds(5))
                         .withTimestampAssigner((event, recordTimestamp) -> event.getTimestamp()))
                 .keyBy(Event::getEvent)
-                // 按滑动频率划分预聚合小窗口
+                // 按滑动频率和窗口长度的最大公约数(1分钟)划分预聚合小窗口
                 .window(TumblingEventTimeWindows.of(Duration.ofMinutes(1)))
                 .aggregate(new AggEventsInMinute())
                 .keyBy(EventAgg::getEvent)
